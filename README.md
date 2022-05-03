@@ -26,7 +26,7 @@ You might get an error `xrange is not defined` while running our code. This erro
 
 This error can be resolved by editing the source code of the `libtiff` library. 
 
-Go to the file in the source code of the library from where the error arises (the file name will be displayed in the terminal when it is showing the error) and replace all the ```xrange()``` (python2) functions in the file to ```range()``` (python3).
+Go to the file in the source code of the library from where the error arises (the file name will be displayed in the terminal when it is showing the error) and replace all the ```xrange()``` (python2) functions in the file to ```range()``` (python3) or alternatively add ```xrange = range``` line in the file.
 
 ## Pre-trained Model
 
