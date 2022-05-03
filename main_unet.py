@@ -60,12 +60,12 @@ def numericalSort(value):
     return parts
 
 # List of file names of actual Satellite images for traininig 
-filelist_trainx = sorted(glob.glob('sample-data/train/sat/*.tif'), key=numericalSort)
+filelist_trainx = sorted(glob.glob('sample-data/train/sat/India/*.tif'), key=numericalSort)
 # List of file names of classified images for traininig 
-filelist_trainy = sorted(glob.glob('sample-data/train/gt/*.tif'), key=numericalSort)
+filelist_trainy = sorted(glob.glob('sample-data/train/gt/India/*.tif'), key=numericalSort)
 
 # List of file names of actual Satellite images for testing 
-filelist_testx = sorted(glob.glob('sample-data/test/sat_test/*.tif'), key=numericalSort)
+filelist_testx = sorted(glob.glob('sample-data/test/sat_test/India/*.tif'), key=numericalSort)
                                         
 
 
@@ -203,7 +203,7 @@ def new_crops(img, crop_size = 512):
 # Reading, padding, cropping and making array of all the cropped images of all the trainig sat images
 trainx_list = []
 
-for fname in filelist_trainx[:13]:
+for fname in filelist_trainx[:1]:
     
     # Reading the image
     tif = TIFF.open(fname)
@@ -221,7 +221,7 @@ trainx = np.asarray(trainx_list)
 # Reading, padding, cropping and making array of all the cropped images of all the trainig gt images
 trainy_list = []
 
-for fname in filelist_trainy[:13]:
+for fname in filelist_trainy[:1]:
     
     # Reading the image
     tif = TIFF.open(fname)
@@ -242,7 +242,7 @@ testx_list = []
 #for fname in filelist_trainx[13]:
     
     # Reading the image
-tif = TIFF.open(filelist_trainx[13])
+tif = TIFF.open(filelist_trainx[0])
 image = tif.read_image()
     
 # Padding as required and cropping
@@ -257,10 +257,10 @@ testx = np.asarray(testx_list)
 # Reading, padding, cropping and making array of all the cropped images of all the testing sat images
 testy_list = []
 
-#for fname in filelist_trainx[13]:
+#for fname in filelist_trainx[0]:
     
 # Reading the image
-tif = TIFF.open(filelist_trainy[13])
+tif = TIFF.open(filelist_trainy[0])
 image = tif.read_image()
     
 # Padding as required and cropping
@@ -296,7 +296,7 @@ for fname in filelist_trainx:
     xtrain_list.append(image)
 
 x_train = np.asarray(xtrain_list)
-tif = TIFF.open('sample-data/train/sat/14.tif')
+tif = TIFF.open('sample-data/train/sat/India/1.tif')
 image = tif.read_image()
 crop_size = 128
     
@@ -336,7 +336,7 @@ for fname in filelist_trainy:
 y_train = np.asarray(ytrain_list)
 
 
-tif = TIFF.open('sample-data/train/gt/14.tif')
+tif = TIFF.open('sample-data/train/gt/India/1.tif')
 image = tif.read_image()
 crop_size = 128
     
@@ -441,10 +441,12 @@ color_dict = {0: (0, 0, 0),
 def rgb_to_onehot(rgb_arr, color_dict):
     num_classes = len(color_dict)
     shape = rgb_arr.shape[:2]+(num_classes,)
-    #print(shape)
+    # print("Shape",shape)
     arr = np.zeros( shape, dtype=np.int8 )
     for i, cls in enumerate(color_dict):
+        rgb_arr = rgb_arr[:,:,:3]
         arr[:,:,i] = np.all(rgb_arr.reshape( (-1,3) ) == color_dict[i], axis=1).reshape(shape[:2])
+        # print("RGB_ARR_SHAPE", rgb_arr.shape)
     return arr
 
 def onehot_to_rgb(onehot, color_dict):
@@ -527,6 +529,12 @@ model.save("model_augment.h5")
 
 #testx = testx/np.max(testx)
 #testy = testy/np.max(testy)
+
+print(trainx.shape)
+print(trainy_hot.shape)
+print(testx.shape)
+print(testy_hot.shape)
+
 
 history = model.fit(trainx, trainy_hot, epochs=10, validation_data = (testx, testy_hot),batch_size=64, verbose=1)
 model.save("model_onehot.h5")
