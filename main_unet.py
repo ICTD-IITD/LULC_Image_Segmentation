@@ -65,10 +65,12 @@ filelist_trainx = sorted(glob.glob('sample-data/train/sat/India/*.tif'), key=num
 filelist_trainy = sorted(glob.glob('sample-data/train/gt/India/*.tif'), key=numericalSort)
 
 # List of file names of actual Satellite images for testing 
-filelist_testx = sorted(glob.glob('sample-data/test/sat_test/India/*.tif'), key=numericalSort)
+filelist_testx = sorted(glob.glob('sample-data/test/sat/India/*.tif'), key=numericalSort)
                                         
 
-
+num_trainx = len(filelist_trainx)
+num_trainy = len(filelist_trainy)
+num_testx = len(filelist_testx)
 # Not useful, messes up with the 4 dimentions of sat images
 
 # Resizing the image to nearest dimensions multipls of 'stride'
@@ -203,7 +205,7 @@ def new_crops(img, crop_size = 512):
 # Reading, padding, cropping and making array of all the cropped images of all the trainig sat images
 trainx_list = []
 
-for fname in filelist_trainx[:1]:
+for fname in filelist_trainx[:num_trainx]:
     
     # Reading the image
     tif = TIFF.open(fname)
@@ -221,7 +223,7 @@ trainx = np.asarray(trainx_list)
 # Reading, padding, cropping and making array of all the cropped images of all the trainig gt images
 trainy_list = []
 
-for fname in filelist_trainy[:1]:
+for fname in filelist_trainy[:num_trainy]:
     
     # Reading the image
     tif = TIFF.open(fname)
