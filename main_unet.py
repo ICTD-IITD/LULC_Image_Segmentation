@@ -1,3 +1,9 @@
+# argv[1] -- crop_size
+# argv[2] -- batch_size
+# argv[3] -- num_epochs
+
+
+
 import PIL
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -8,6 +14,7 @@ import math
 import glob
 import cv2
 import os
+import sys
 import skimage.io as io
 import skimage.transform as trans
 from keras.models import *
@@ -60,17 +67,16 @@ def numericalSort(value):
     return parts
 
 # List of file names of actual Satellite images for traininig 
-filelist_trainx = sorted(glob.glob('sample-data/train/sat/India/*.tif'), key=numericalSort)
-# List of file names of classified images for traininig 
-filelist_trainy = sorted(glob.glob('sample-data/train/gt/India/*.tif'), key=numericalSort)
+filelist_trainx = sorted(glob.glob('sample-data/train/sat/*.tif'), key=numericalSort)
+# List of file names of classified images for traininig / Ground Truth
+filelist_trainy = sorted(glob.glob('sample-data/train/gt/*.tif'), key=numericalSort)
+                                       
 
-# List of file names of actual Satellite images for testing 
-filelist_testx = sorted(glob.glob('sample-data/test/sat/India/*.tif'), key=numericalSort)
-                                        
+num_total = len(filelist_trainx)
+num_trainx = int(3*(num_total)/4)
+num_trainy = num_trainx
 
-num_trainx = len(filelist_trainx)
-num_trainy = len(filelist_trainy)
-num_testx = len(filelist_testx)
+# num_testx = len(filelist_testx)
 # Not useful, messes up with the 4 dimentions of sat images
 
 # Resizing the image to nearest dimensions multipls of 'stride'
@@ -212,7 +218,7 @@ for fname in filelist_trainx[:num_trainx]:
     image = tif.read_image()
     
     # Padding as required and cropping
-    crops_list = crops(image)
+    crops_list = crops(image, int(sys.argv[1]))
     #print(len(crops_list))
     trainx_list = trainx_list + crops_list
     
@@ -230,7 +236,7 @@ for fname in filelist_trainy[:num_trainy]:
     image = tif.read_image()
     
     # Padding as required and cropping
-    crops_list =crops(image)
+    crops_list =crops(image, int(sys.argv[1]))
     
     trainy_list = trainy_list + crops_list
     
@@ -241,16 +247,16 @@ trainy = np.asarray(trainy_list)
 # Reading, padding, cropping and making array of all the cropped images of all the testing sat images
 testx_list = []
 
-#for fname in filelist_trainx[13]:
+for fname in filelist_trainx[num_trainx:num_total]:
     
     # Reading the image
-tif = TIFF.open(filelist_trainx[0])
-image = tif.read_image()
+    tif = TIFF.open(fname)
+    image = tif.read_image()
     
 # Padding as required and cropping
-crops_list = crops(image)
-    
-testx_list = testx_list + crops_list
+    crops_list = crops(image, int(sys.argv[1]))
+        
+    testx_list = testx_list + crops_list
     
 # Array of all the cropped Testing sat Images  
 testx = np.asarray(testx_list)
@@ -259,99 +265,20 @@ testx = np.asarray(testx_list)
 # Reading, padding, cropping and making array of all the cropped images of all the testing sat images
 testy_list = []
 
-#for fname in filelist_trainx[0]:
+for fname in filelist_trainx[num_trainx:num_total]:
     
-# Reading the image
-tif = TIFF.open(filelist_trainy[0])
-image = tif.read_image()
-    
-# Padding as required and cropping
-crops_list = crops(image)
-    
-testy_list = testy_list + crops_list
+    # Reading the image
+    tif = TIFF.open(fname)
+    image = tif.read_image()
+        
+    # Padding as required and cropping
+    crops_list = crops(image, int(sys.argv[1]))
+        
+    testy_list = testy_list + crops_list
     
 # Array of all the cropped Testing sat Images  
 testy = np.asarray(testy_list)
 
-# Making array of all the training sat images as it is without any cropping
-
-xtrain_list = []
-
-for fname in filelist_trainx:
-    
-    # Reading the image
-    tif = TIFF.open(fname)
-    image = tif.read_image()
-    
-    crop_size = 128
-    
-    stride = 64
-    
-    h, w, c = image.shape
-    
-    n_h = int(int(h/stride))
-    n_w = int(int(w/stride))
-    
-    
-    image = padding(image, w, h, c, crop_size, stride, n_h, n_w)
-    
-    xtrain_list.append(image)
-
-x_train = np.asarray(xtrain_list)
-tif = TIFF.open('sample-data/train/sat/India/1.tif')
-image = tif.read_image()
-crop_size = 128
-    
-stride = 64
-h, w, c = image.shape
-    
-n_h = int(int(h/stride))
-n_w = int(int(w/stride))
-    
-    
-image = padding(image, w, h, c, crop_size, stride, n_h, n_w)
-x_train = image
-# Making array of all the training gt images as it is without any cropping
-
-ytrain_list = []
-
-for fname in filelist_trainy:
-    
-    # Reading the image
-    tif = TIFF.open(fname)
-    image = tif.read_image()
-    
-    crop_size = 128
-    
-    stride = 64
-    
-    h, w, c = image.shape
-    
-    n_h = int(int(h/stride))
-    n_w = int(int(w/stride))
-    
-    
-    image = padding(image, w, h, c, crop_size, stride, n_h, n_w)
-    
-    ytrain_list.append(image)
-
-y_train = np.asarray(ytrain_list)
-
-
-tif = TIFF.open('sample-data/train/gt/India/1.tif')
-image = tif.read_image()
-crop_size = 128
-    
-stride = 64
-    
-h, w, c = image.shape
-    
-n_h = int(int(h/stride))
-n_w = int(int(w/stride))
-    
-    
-image = padding(image, w, h, c, crop_size, stride, n_h, n_w)
-y_train = image
 
 def unet(shape = (None,None,4)):
     
@@ -418,11 +345,6 @@ def unet(shape = (None,None,4)):
     
     model.summary()
     
-    #filelist_modelweights = sorted(glob.glob('*.h5'), key=numericalSort)
-    
-    #if 'model_nocropping.h5' in filelist_modelweights:
-     #   model.load_weights('model_nocropping.h5')
-    ##model.load_weights("model_onehot.h5")
     return model
 
 
@@ -482,64 +404,14 @@ for i in range(testy.shape[0]):
 testy_hot = np.asarray(testy_hot)
 
 
-'''#trainx = trainx/np.max(trainx)
-trainy = trainy/np.max(trainy)
-
-#testx = testx/np.max(testx)
-testy = testy/np.max(testy)
-
-# Data Augmentation
-
-datagen_args = dict(rotation_range=45.,
-                         width_shift_range=0.1,
-                         height_shift_range=0.1,
-                         shear_range=0.2,
-                         zoom_range=0.2,
-                         horizontal_flip=True,
-                         vertical_flip=True,
-                         fill_mode='reflect')
-
-x_datagen = ImageDataGenerator(**datagen_args)
-y_datagen = ImageDataGenerator(**datagen_args)
-
-seed = 1
-batch_size = 16
-x_datagen.fit(trainx, augment=True, seed = seed)
-y_datagen.fit(trainy, augment=True, seed = seed)
-
-x_generator = x_datagen.flow(trainx, batch_size = 16, seed=seed)
-
-y_generator = y_datagen.flow(trainy, batch_size = 16, seed=seed)
-
-train_generator = zip(x_generator, y_generator)
-
-X_datagen_val = ImageDataGenerator()
-Y_datagen_val = ImageDataGenerator()
-X_datagen_val.fit(testx, augment=True, seed=seed)
-Y_datagen_val.fit(testy, augment=True, seed=seed)
-X_test_augmented = X_datagen_val.flow(testx, batch_size=batch_size, seed=seed)
-Y_test_augmented = Y_datagen_val.flow(testy, batch_size=batch_size, seed=seed)
-
-test_generator = zip(X_test_augmented, Y_test_augmented)
-
-model.fit_generator(train_generator, validation_data=test_generator, validation_steps=batch_size/2, epochs = 10, steps_per_epoch=len(x_generator))
-model.save("model_augment.h5")
-'''
-
-#trainx = trainx/np.max(trainx)
-#trainy = trainy/np.max(trainy)
-
-#testx = testx/np.max(testx)
-#testy = testy/np.max(testy)
-
 print(trainx.shape)
 print(trainy_hot.shape)
 print(testx.shape)
 print(testy_hot.shape)
 
-
-history = model.fit(trainx, trainy_hot, epochs=10, validation_data = (testx, testy_hot),batch_size=64, verbose=1)
-model.save("model_onehot.h5")
+# batch size = 64
+history = model.fit(trainx, trainy_hot, epochs=int(sys.argv[3]), validation_data = (testx, testy_hot),batch_size=int(sys.argv[2]), verbose=1)
+model.save("model_onehot_2.h5")
 
 
 # list all data in history
@@ -565,36 +437,5 @@ plt.savefig('loss_plot.png')
 plt.show()
 plt.close()
 
-#epochs = 20
-#for e in range(epochs):
-#        print("epoch %d" % e)
-#        #for X_train, Y_train in zip(x_train, y_train): # these are chunks of ~10k pictures
-#        h,w,c = x_train.shape
-#        X_train = np.reshape(x_train,(1,h,w,c))
-#        h,w,c = y_train.shape
-#        Y_train = np.reshape(y_train,(1,h,w,c))
-#        model.fit(X_train, Y_train, batch_size=1, nb_epoch=1)
-	
-#        model.save("model_nocropping.h5")        
-#print(X_train.shape, Y_train.shape)
 
-
-#model.save("model_nocropping.h5")
-
-#epochs = 10
-#for e in range(epochs):
-#	print("epoch %d" % e)
-#	for X_train, Y_train in zip(x_train, y_train): # these are chunks of ~10k pictures
-#		h,w,c = X_train.shape
-#		X_train = np.reshape(X_train,(1,h,w,c))
-#		h,w,c = Y_train.shape
-#		Y_train = np.reshape(Y_train,(1,h,w,c))
-#		model.fit(X_train, Y_train, batch_size=1, nb_epoch=1)
-        #print(X_train.shape, Y_train.shape)
-
-
-#model.save("model_nocropping.h5")
-
-#accuracy = model.evaluate(x=x_test,y=y_test,batch_size=16)
-#print("Accuracy: ",accuracy[1])
 
